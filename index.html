@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>🏁 Neon Ball Race — Farcaster Mini App</title>
+<style>
+  :root { color-scheme: dark; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: linear-gradient(135deg, #0a0e13 0%, #1a1f2e 100%);
+    color: #e7ecf0;
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100dvh;
+    padding: 0;
+  }
+  .wrap { width: min(1200px, 98vw); position: relative; }
+  
+  .game-header {
+    width: 100%;
+    background: #12171b;
+    border-bottom: 2px solid #1f2a32;
+    padding: 15px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+  
+  .game-header h1 {
+    font-size: 20px;
+    margin: 0;
+  }
+  
+  .header-stats {
+    display: flex;
+    gap: 30px;
+  }
+  
+  .stat-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  
+  .stat-item label {
+    font-size: 12px;
+  }
+  
+  .stat-item .score-display {
+    font-size: 20px;
+  }
+  .card { background: #12171b; border: 1px solid #1f2a32; border-radius: 14px; padding: 20px; box-shadow: 0 10px 30px rgba(0,0,0,.35); }
+  .overlay { position: fixed; inset: 0; display: grid; place-items: center; background: rgba(8,11,14,.85); backdrop-filter: blur(4px); padding: 16px; z-index: 100; }
+  .hidden { display: none !important; }
+  
+  h1 {
+    font-size: 28px;
+    font-weight: 900;
+    margin-bottom: 12px;
+    text-shadow: 0 2px 10px rgba(168,85,247,0.5);
+  }
+  
+  .muted {
+    color: #9aa7b1;
+    font-size: 14px;
+    line-height: 1.4;
+    margin-bottom: 16px;
+  }
+  
+  .btn-primary {
+    padding: 14px 28px;
+    background: linear-gradient(135deg, #a855f7, #7c3aed);
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    font-weight: 900;
+    font-size: 16px;
+    cursor: pointer;
+    box-shadow: 0 6px 20px rgba(168,85,247,0.4);
+    transition: all 0.2s;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  
+  .btn-primary:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(168,85,247,0.5);
+  }
+  
+  .btn-primary:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+  
+  #game-container {
+    background: #0a0a1f;
+    border: 3px solid #7c3aed;
+    border-radius: 16px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+    max-width: 100%;
+    display: block;
+    margin: 20px auto 0 auto;
+    width: 100%;
+    height: 600px;
+    position: relative;
+    overflow: hidden;
+  }
+  
+  #status {
+    margin-top: 15px;
+    font-size: 13px;
+    line-height: 1.5;
+    background: #0f151a;
+    border: 1px solid #1f2a32;
+    border-radius: 10px;
+    padding: 12px;
+  }
+  
+  #status b { color: #cde7d8; }
+  #status .ok { color: #4ade80; }
+  #status .warn { color: #fbbf24; }
+  #status .err { color: #f87171; }
+  #status a { color: #86c6ff; text-decoration: none; }
+  
+  #play-again {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    padding: 16px 32px;
+    background: linear-gradient(135deg, #a855f7, #7c3aed);
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    font-weight: 900;
+    font-size: 18px;
+    cursor: pointer;
+    box-shadow: 0 10px 40px rgba(168,85,247,0.5);
+    z-index: 50;
+  }
+  
+  .instructions {
+    background: rgba(168,85,247,0.1);
+    border: 1px solid rgba(168,85,247,0.3);
+    border-radius: 10px;
+    padding: 15px;
+    margin-top: 15px;
+  }
+  
+  .instructions h3 {
+    color: #a855f7;
+    font-size: 16px;
+    margin-bottom: 10px;
+  }
+  
+  .instructions ul {
+    list-style: none;
+    padding: 0;
+  }
+  
+  .instructions li {
+    color: #cbd5e1;
+    font-size: 14px;
+    margin-bottom: 8px;
+    padding-left: 20px;
+    position: relative;
+  }
+  
+  .instructions li:before {
+    content: "•";
+    color: #a855f7;
+    font-weight: bold;
+    position: absolute;
+    left: 0;
+  }
+  
+  .color-selection {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin: 20px 0;
+  }
+  
+  .color-btn {
+    padding: 20px;
+    border: 3px solid transparent;
+    border-radius: 12px;
+    font-weight: 700;
+    font-size: 16px;
+    cursor: pointer;
+    transition: all 0.2s;
+    color: white;
+  }
+  
+  .color-btn.selected {
+    border-color: white;
+    transform: scale(1.1);
+  }
+  
+  .color-btn:hover {
+    transform: scale(1.05);
+  }
+  
+  @media (max-width: 720px) {
+    .game-header {
+      padding: 12px 15px;
+    }
+    .game-header h1 {
+      font-size: 18px;
+    }
+    .header-stats {
+      gap: 20px;
+    }
+    .stat-item label {
+      font-size: 11px;
+    }
+    .stat-item .score-display {
+      font-size: 18px;
+    }
+    #game-container {
+      height: 500px;
+    }
+  }
+</style>
+</head>
+<body>
+  <div class="game-header">
+    <h1>🏁 Neon Ball Race</h1>
+    <div class="header-stats">
+      <div class="stat-item">
+        <label>Time:</label>
+        <span class="score-display" id="timeDisplay">0s</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <div id="intro-overlay" class="overlay">
+      <div class="card" role="dialog" aria-modal="true">
+        <h1>🏁 Neon Ball Race</h1>
+        <p class="muted">Choose your neon ball and race to victory!</p>
+
+        <div id="color-select-screen">
+          <h3 style="color: #a855f7; margin-bottom: 15px; text-align: center;">Select Your Ball Color:</h3>
+          <div class="color-selection" id="colorSelection"></div>
+        </div>
+
+        <div style="display: flex; justify-content: center; gap: 12px; margin-top: 20px;">
+          <button id="play" class="btn-primary" disabled>💰 Pay & Race</button>
+        </div>
+        
+        <div class="instructions">
+          <h3>How to Play:</h3>
+          <ul>
+            <li>Choose your favorite colored ball</li>
+            <li>Watch as 6 balls race down the neon track</li>
+            <li>Camera follows your chosen ball</li>
+            <li>The race lasts about 10 seconds</li>
+            <li>First ball to cross the finish line wins!</li>
+          </ul>
+        </div>
+        
+        <div id="status" class="hidden"></div>
+      </div>
+    </div>
+
+    <div id="game-container"></div>
+
+    <button id="play-again" class="hidden">💰 Pay & Race Again</button>
+  </div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script type="module">
+import { sdk } from 'https://esm.sh/@farcaster/miniapp-sdk';
+sdk.actions.ready();
+
+const USE_BASE_SEPOLIA = false;
+const RECIPIENT = "0x5DE6945201D6B551cdB6F88bE0335A989833c446";
+const AMOUNT_ETH = "0.00001";
+
+const BASE_MAINNET = { chainId: "0x2105",  explorer: "https://basescan.org/tx/" };
+const BASE_SEPOLIA = { chainId: "0x14a34", explorer: "https://sepolia.basescan.org/tx/" };
+const TARGET = USE_BASE_SEPOLIA ? BASE_SEPOLIA : BASE_MAINNET;
+
+const statusEl = document.getElementById('status');
+const playBtn = document.getElementById('play');
+const playAgainBtn = document.getElementById('play-again');
+const timeDisplay = document.getElementById('timeDisplay');
+const gameContainer = document.getElementById('game-container');
+const colorSelection = document.getElementById('colorSelection');
+
+const showStatus = () => statusEl.classList.remove('hidden');
+const addLine = html => { showStatus(); statusEl.insertAdjacentHTML('beforeend', `<div>${html}</div>`); };
+const clearStatus = () => statusEl.innerHTML = '';
+const disable = (el, yes=true) => { if (el) el.disabled = yes; };
+
+function parseEther(x) {
+  const [w, f=""] = String(x).split('.');
+  const frac = (f + '0'.repeat(18)).slice(0, 18);
+  return '0x' + (BigInt(w) * 10n**18n + BigInt(frac)).toString(16);
+}
+
+async function getProvider() {
+  try {
+    const p = await sdk.wallet.getEthereumProvider();
+    if (p) return p;
+  } catch {}
+  return window.ethereum ?? null;
+}
+
+async function ensureChain(provider, chainId) {
+  const current = (await provider.request({ method: 'eth_chainId' }))?.toLowerCase();
+  if (current === chainId.toLowerCase()) return;
+  try {
+    await provider.request({ method: 'wallet_switchEthereumChain', params: [{ chainId }] });
+  } catch (e) {
+    if (e?.code === 4902) {
+      await provider.request({ method: 'wallet_addEthereumChain', params: [{ chainId }] });
+      await provider.request({ method: 'wallet_switchEthereumChain', params: [{ chainId }] });
+    } else { throw e; }
+  }
+}
+
+async function requiredPayment() {
+  clearStatus();
+  addLine(`<b>Step 1:</b> Locating wallet provider…`);
+  const provider = await getProvider();
+  if (!provider) {
+    addLine(`<span class="err">No wallet available.</span> Open in Farcaster or enable a wallet.`);
+    throw new Error('NO_PROVIDER');
+  }
+  addLine(`<span class="ok">Provider ready.</span>`);
+
+  addLine(`<b>Step 2:</b> Requesting accounts…`);
+  const [from] = await provider.request({ method: 'eth_requestAccounts' });
+  addLine(`<span class="ok">Account: ${from.slice(0,6)}…${from.slice(-4)}</span>`);
+
+  addLine(`<b>Step 3:</b> Switching to Base${USE_BASE_SEPOLIA?' Sepolia':''}…`);
+  await ensureChain(provider, TARGET.chainId);
+  addLine(`<span class="ok">On Base${USE_BASE_SEPOLIA?' Sepolia':''}.</span>`);
+
+  addLine(`<b>Step 4:</b> Sending ${AMOUNT_ETH} ETH to ${RECIPIENT.slice(0,6)}…${RECIPIENT.slice(-4)}…`);
+  const hash = await provider.request({
+    method: 'eth_sendTransaction',
+    params: [{ from, to: RECIPIENT, value: parseEther(AMOUNT_ETH) }]
+  });
+  addLine(`<span class="ok">TX sent.</span> <a target="_blank" rel="noopener" href="${TARGET.explorer}${hash}">View on Basescan</a>`);
+  return hash;
+}
+
+async function payThen(action, triggerBtn) {
+  try {
+    disable(triggerBtn, true);
+    await requiredPayment();
+    await action();
+  } catch (e) {
+    console.warn('Payment gate blocked action:', e);
+    addLine(`<span class="warn">Payment required. Please try again.</span>`);
+  } finally {
+    disable(triggerBtn, false);
+  }
+}
+
+const colors = [
+  { name: 'Red', hex: 0xff0000, glow: '#ff0000' },
+  { name: 'Blue', hex: 0x0088ff, glow: '#0088ff' },
+  { name: 'Green', hex: 0x00ff00, glow: '#00ff00' },
+  { name: 'Yellow', hex: 0xffff00, glow: '#ffff00' },
+  { name: 'Purple', hex: 0xff00ff, glow: '#ff00ff' },
+  { name: 'Cyan', hex: 0x00ffff, glow: '#00ffff' }
+];
+
+let selectedColor = null;
+
+colors.forEach(color => {
+  const btn = document.createElement('button');
+  btn.className = 'color-btn';
+  btn.textContent = color.name;
+  btn.style.backgroundColor = color.glow;
+  btn.style.boxShadow = `0 0 20px ${color.glow}`;
+  btn.onclick = () => {
+    document.querySelectorAll('.color-btn').forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
+    selectedColor = color.name;
+    playBtn.disabled = false;
+  };
+  colorSelection.appendChild(btn);
+});
+
+let scene, camera, renderer, balls = [], playerBall, animationId, raceStartTime, timerInterval;
+
+function initGame() {
+  scene = new THREE.Scene();
+  scene.fog = new THREE.Fog(0x000033, 50, 300);
+
+  camera = new THREE.PerspectiveCamera(75, gameContainer.clientWidth / gameContainer.clientHeight, 0.1, 1000);
+
+  renderer = new THREE.WebGLRenderer({ antialias: true });
+  renderer.setSize(gameContainer.clientWidth, gameContainer.clientHeight);
+  renderer.setClearColor(0x000033);
+  gameContainer.appendChild(renderer.domElement);
+
+  const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
+  scene.add(ambientLight);
+
+  const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+  directionalLight.position.set(0, 50, 50);
+  scene.add(directionalLight);
+
+  const trackWidth = 24;
+  const trackLength = 500;
+  const laneWidth = trackWidth / 6;
+
+  const groundGeometry = new THREE.PlaneGeometry(trackWidth, trackLength);
+  const groundMaterial = new THREE.MeshPhongMaterial({ color: 0x001a33, transparent: true, opacity: 0.9 });
+  const ground = new THREE.Mesh(groundGeometry, groundMaterial);
+  ground.rotation.x = -Math.PI / 2;
+  ground.position.z = -trackLength / 2;
+  scene.add(ground);
+
+  for (let i = 0; i <= 6; i++) {
+    const lineGeometry = new THREE.BufferGeometry();
+    const x = -trackWidth / 2 + laneWidth * i;
+    const vertices = new Float32Array([x, 0.1, 5, x, 0.1, -trackLength + 5]);
+    lineGeometry.setAttribute('position', new THREE.BufferAttribute(vertices, 3));
+    const lineMaterial = new THREE.LineBasicMaterial({ color: 0x00ffff, transparent: true, opacity: 0.7 });
+    scene.add(new THREE.Line(lineGeometry, lineMaterial));
+  }
+
+  for (let i = 0; i <= 100; i++) {
+    const lineGeometry = new THREE.BufferGeometry();
+    const z = 5 - (trackLength / 100) * i;
+    const vertices = new Float32Array([-trackWidth / 2, 0.1, z, trackWidth / 2, 0.1, z]);
+    lineGeometry.setAttribute('position', new THREE.BufferAttribute(vertices, 3));
+    const lineMaterial = new THREE.LineBasicMaterial({ 
+      color: i % 10 === 0 ? 0xff00ff : 0x660066, 
+      transparent: true, 
+      opacity: i % 10 === 0 ? 0.6 : 0.3 
+    });
+    scene.add(new THREE.Line(lineGeometry, lineMaterial));
+  }
+
+  const startGeometry = new THREE.PlaneGeometry(trackWidth, 1);
+  const startMaterial = new THREE.MeshBasicMaterial({ color: 0x00ff00, transparent: true, opacity: 0.7 });
+  const startLine = new THREE.Mesh(startGeometry, startMaterial);
+  startLine.rotation.x = -Math.PI / 2;
+  startLine.position.z = 0;
+  startLine.position.y = 0.15;
+  scene.add(startLine);
+
+  const finishGeometry = new THREE.PlaneGeometry(trackWidth, 3);
+  const finishMaterial = new THREE.MeshBasicMaterial({ color: 0xffff00, transparent: true, opacity: 0.8 });
+  const finishLine = new THREE.Mesh(finishGeometry, finishMaterial);
+  finishLine.rotation.x = -Math.PI / 2;
+  finishLine.position.z = -trackLength + 5;
+  finishLine.position.y = 0.2;
+  scene.add(finishLine);
+
+  balls = [];
+  colors.forEach((color, index) => {
+    const geometry = new THREE.SphereGeometry(1, 32, 32);
+    const material = new THREE.MeshPhongMaterial({ 
+      color: color.hex,
+      emissive: color.hex,
+      emissiveIntensity: 0.5,
+      shininess: 100,
+      specular: 0xffffff
+    });
+    const ball = new THREE.Mesh(geometry, material);
+    
+    const laneX = -trackWidth / 2 + laneWidth / 2 + laneWidth * index;
+    ball.position.set(laneX, 1, 0);
+    
+    const baseSpeed = 50;
+    const speedVariation = (Math.random() - 0.5) * 5;
+    
+    ball.userData = {
+      color: color.name,
+      speed: baseSpeed + speedVariation,
+      laneX: laneX,
+      rotation: 0
+    };
+    
+    const glowGeometry = new THREE.SphereGeometry(1.3, 16, 16);
+    const glowMaterial = new THREE.MeshBasicMaterial({ color: color.hex, transparent: true, opacity: 0.4 });
+    const glow = new THREE.Mesh(glowGeometry, glowMaterial);
+    ball.add(glow);
+    
+    scene.add(ball);
+    balls.push(ball);
+    
+    if (color.name === selectedColor) {
+      playerBall = ball;
+    }
+  });
+
+  const starsGeometry = new THREE.BufferGeometry();
+  const starVertices = [];
+  for (let i = 0; i < 1000; i++) {
+    starVertices.push(
+      (Math.random() - 0.5) * 400,
+      Math.random() * 100 + 5,
+      -Math.random() * trackLength - 50
+    );
+  }
+  starsGeometry.setAttribute('position', new THREE.Float32BufferAttribute(starVertices, 3));
+  const starsMaterial = new THREE.PointsMaterial({ color: 0xffffff, size: 0.5, transparent: true, opacity: 0.6 });
+  scene.add(new THREE.Points(starsGeometry, starsMaterial));
+
+  let countdown = 3;
+  const countdownDiv = document.createElement('div');
+  countdownDiv.style.cssText = 'position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:120px;font-weight:900;color:#a855f7;z-index:50;text-shadow:0 0 30px rgba(168,85,247,0.8);';
+  countdownDiv.textContent = countdown;
+  gameContainer.appendChild(countdownDiv);
+
+  const countdownInterval = setInterval(() => {
+    countdown--;
+    if (countdown > 0) {
+      countdownDiv.textContent = countdown;
+    } else {
+      countdownDiv.textContent = 'GO!';
+      setTimeout(() => {
+        countdownDiv.remove();
+        startRace();
+      }, 1000);
+      clearInterval(countdownInterval);
+    }
+  }, 1000);
+}
+
+function startRace() {
+  raceStartTime = Date.now();
+  timerInterval = setInterval(() => {
+    const elapsed = Math.floor((Date.now() - raceStartTime) / 1000);
+    timeDisplay.textContent = elapsed + 's';
+  }, 100);
+  
+  animate();
+}
+
+function animate() {
+  animationId = requestAnimationFrame(animate);
+
+  let winner = null;
+  balls.forEach(ball => {
+    if (ball.position.z > -495) {
+      ball.position.z -= ball.userData.speed * 0.016;
+      ball.userData.rotation += ball.userData.speed * 0.02;
+      ball.rotation.x = ball.userData.rotation;
+      
+      const sway = Math.sin(ball.userData.rotation * 2) * 0.05;
+      ball.position.x = ball.userData.laneX + sway;
+    } else if (!winner) {
+      winner = ball.userData.color;
+      endRace(winner);
+    }
+  });
+
+  if (playerBall) {
+    const targetX = playerBall.position.x;
+    const targetZ = playerBall.position.z + 8;
+    const targetY = playerBall.position.y + 4;
+    
+    camera.position.x += (targetX - camera.position.x) * 0.1;
+    camera.position.z += (targetZ - camera.position.z) * 0.1;
+    camera.position.y += (targetY - camera.position.y) * 0.1;
+    
+    camera.lookAt(targetX, 1, playerBall.position.z - 10);
+  }
+
+  renderer.render(scene, camera);
+}
+
+function endRace(winner) {
+  cancelAnimationFrame(animationId);
+  clearInterval(timerInterval);
+  
+  const playerWon = winner === selectedColor;
+  
+  renderer.domElement.style.filter = 'blur(4px)';
+  
+  const resultDiv = document.createElement('div');
+  resultDiv.style.cssText = 'position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;background:rgba(0,0,0,0.95);padding:40px;border-radius:20px;border:3px solid #a855f7;z-index:50;box-shadow:0 0 50px rgba(168,85,247,0.5);';
+  
+  resultDiv.innerHTML = `
+    <div style="font-size:80px;margin-bottom:20px;">${playerWon ? '🏆' : '😢'}</div>
+    <h2 style="font-size:48px;color:${playerWon ? '#4ade80' : '#f87171'};margin-bottom:20px;text-shadow:0 0 20px currentColor;">
+      ${playerWon ? 'YOU WON!' : 'YOU LOST'}
+    </h2>
+    <p style="font-size:24px;color:#a855f7;margin-bottom:10px;">Winner: <strong>${winner}</strong></p>
+    <p style="font-size:18px;color:#94a3b8;">Your choice: <strong>${selectedColor}</strong></p>
+  `;
+  gameContainer.appendChild(resultDiv);
+  
+  playAgainBtn.classList.remove('hidden');
+}
+
+playBtn.addEventListener('click', (e) => {
+  e.preventDefault();
+  payThen(() => {
+    document.getElementById('intro-overlay').classList.add('hidden');
+    initGame();
+  }, playBtn);
+});
+
+playAgainBtn.addEventListener('click', (e) => {
+  e.preventDefault();
+  payThen(() => {
+    playAgainBtn.classList.add('hidden');
+    if (renderer && renderer.domElement && renderer.domElement.parentNode) {
+      gameContainer.removeChild(renderer.domElement);
+    }
+    const resultDiv = gameContainer.querySelector('div[style*="position:absolute"]');
+    if (resultDiv) resultDiv.remove();
+    balls = [];
+    playerBall = null;
+    timeDisplay.textContent = '0s';
+    document.getElementById('intro-overlay').classList.remove('hidden');
+  }, playAgainBtn);
+});
+
+window.addEventListener('error', e => console.error('Error:', e.error || e));
+window.addEventListener('unhandledrejection', e => console.error('Unhandled promise:', e.reason));
+</script>
+</body>
+</html>
