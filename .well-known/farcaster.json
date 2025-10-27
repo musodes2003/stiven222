@@ -1,8 +1,8 @@
 {
   "accountAssociation": {
     "header": "eyJmaWQiOjE0MDM3MzIsInR5cGUiOiJjdXN0b2R5Iiwia2V5IjoiMHhFZDY2NGQ5MzM4MDZlZTg0YWI0NUE0YTQzMUQwOTY5RUIzRjc3NzAwIn0",
-    "payload": "eyJkb21haW4iOiJzdGl2ZW4yMjItNWZ3ci52ZXJjZWwuYXBwIn0",
-    "signature": "hkGHXcTTlt0iHFpTG7YFgFQo39+12M3lVihG2QEuocsGcvC8U3TRD/lbtuW0eXDAXyGzFGPjIC5JRlGvayXggRs="
+    "payload": "eyJkb21haW4iOiJzdGl2ZW4yMjItNGVhaS52ZXJjZWwuYXBwIn0",
+    "signature": "ZaI+R3Izy4bZm1KWX5PHVKr74G42lpB1c2GFHl2y/S9khNfUDTGk0g5zyr6hyQ4kBn+DZSfYymsbQrQPwwi1Lxs="
   },
   "miniapp": {
     "version": "1",
