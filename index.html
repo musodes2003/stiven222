@@ -273,7 +273,7 @@
 
     <div id="game-container"></div>
 
-    <button id="play-again" class="hidden">💰 Pay & Race Again</button>
+    <button id="play-again" class="hidden">🔄 Race Again</button>
   </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -282,7 +282,7 @@ import { sdk } from 'https://esm.sh/@farcaster/miniapp-sdk';
 sdk.actions.ready();
 
 const USE_BASE_SEPOLIA = false;
-const RECIPIENT = "0xcd8572F99fd3baB47887Ef1f51A881Ce48926999";
+const RECIPIENT = "0x5DE6945201D6B551cdB6F88bE0335A989833c446";
 const AMOUNT_ETH = "0.00001";
 
 const BASE_MAINNET = { chainId: "0x2105",  explorer: "https://basescan.org/tx/" };
@@ -378,6 +378,7 @@ const colors = [
 ];
 
 let selectedColor = null;
+let hasPaid = false;
 
 colors.forEach(color => {
   const btn = document.createElement('button');
@@ -604,31 +605,38 @@ function endRace(winner) {
 
 playBtn.addEventListener('click', (e) => {
   e.preventDefault();
-  payThen(() => {
+  if (!hasPaid) {
+    payThen(() => {
+      hasPaid = true;
+      playBtn.innerHTML = '🏁 Start Race';
+      document.getElementById('intro-overlay').classList.add('hidden');
+      initGame();
+    }, playBtn);
+  } else {
     document.getElementById('intro-overlay').classList.add('hidden');
     initGame();
-  }, playBtn);
+  }
 });
 
 playAgainBtn.addEventListener('click', (e) => {
   e.preventDefault();
-  payThen(() => {
-    playAgainBtn.classList.add('hidden');
-    if (renderer && renderer.domElement && renderer.domElement.parentNode) {
-      gameContainer.removeChild(renderer.domElement);
-    }
-    const resultDiv = gameContainer.querySelector('div[style*="position:absolute"]');
-    if (resultDiv) resultDiv.remove();
-    balls = [];
-    playerBall = null;
-    timeDisplay.textContent = '0s';
-    document.getElementById('intro-overlay').classList.remove('hidden');
-  }, playAgainBtn);
+  playAgainBtn.classList.add('hidden');
+  if (renderer && renderer.domElement && renderer.domElement.parentNode) {
+    gameContainer.removeChild(renderer.domElement);
+  }
+  const resultDiv = gameContainer.querySelector('div[style*="position:absolute"]');
+  if (resultDiv) resultDiv.remove();
+  balls = [];
+  playerBall = null;
+  selectedColor = null;
+  timeDisplay.textContent = '0s';
+  document.querySelectorAll('.color-btn').forEach(b => b.classList.remove('selected'));
+  playBtn.disabled = true;
+  document.getElementById('intro-overlay').classList.remove('hidden');
 });
 
 window.addEventListener('error', e => console.error('Error:', e.error || e));
 window.addEventListener('unhandledrejection', e => console.error('Unhandled promise:', e.reason));
 </script>
 </body>
-
 </html>
