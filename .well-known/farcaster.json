@@ -6,10 +6,10 @@
   },
   "miniapp": {
     "version": "1",
-    "name": "Animal Match",
-    "iconUrl": "https://s3images.coroflot.com/user_files/individual_files/133904_AhWF7O5sfiUu5C4BO3PnvdPpw.png",
+    "name": "Neon race",
+    "iconUrl": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTIOMokQP5Cxcx2qOSxGt4lXoSzqPdE5Yog1g&s",
     "homeUrl": "https://stiven222-5fwr.vercel.app/",
-    "imageUrl": "https://i.pinimg.com/474x/73/85/d4/7385d4f88634d9ef9d21df7975533fff.jpg",
+    "imageUrl": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTIOMokQP5Cxcx2qOSxGt4lXoSzqPdE5Yog1g&s",
     "buttonTitle": "Play Now",
     "splashImageUrl": "https://raw.githubusercontent.com/enchanted-assets/public/main/images/tetris-splash.png",
     "splashBackgroundColor": "#000000",
