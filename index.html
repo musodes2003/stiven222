@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>✈️ Bouncing Plane — Farcaster Mini App</title>
+<style>
+  :root { color-scheme: dark; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: linear-gradient(135deg, #0a0e13 0%, #1a1f2e 100%);
+    color: #e7ecf0;
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100dvh;
+    padding: 0;
+  }
+  .wrap { width: min(900px, 96vw); position: relative; }
+  
+  .game-header {
+    width: 100%;
+    background: #12171b;
+    border-bottom: 2px solid #1f2a32;
+    padding: 15px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+  
+  .game-header h1 {
+    font-size: 20px;
+    margin: 0;
+  }
+  
+  .header-stats {
+    display: flex;
+    gap: 30px;
+  }
+  
+  .stat-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  
+  .stat-item label {
+    font-size: 12px;
+  }
+  
+  .stat-item .score-display {
+    font-size: 20px;
+  }
+  .card { background: #12171b; border: 1px solid #1f2a32; border-radius: 14px; padding: 20px; box-shadow: 0 10px 30px rgba(0,0,0,.35); }
+  .overlay { position: fixed; inset: 0; display: grid; place-items: center; background: rgba(8,11,14,.85); backdrop-filter: blur(4px); padding: 16px; z-index: 100; }
+  .hidden { display: none !important; }
+  
+  h1 {
+    font-size: 28px;
+    font-weight: 900;
+    margin-bottom: 12px;
+    text-shadow: 0 2px 10px rgba(59,130,246,0.5);
+  }
+  
+  .muted {
+    color: #9aa7b1;
+    font-size: 14px;
+    line-height: 1.4;
+    margin-bottom: 16px;
+  }
+  
+  .btn-primary {
+    padding: 14px 28px;
+    background: linear-gradient(135deg, #3b82f6, #2563eb);
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    font-weight: 900;
+    font-size: 16px;
+    cursor: pointer;
+    box-shadow: 0 6px 20px rgba(59,130,246,0.4);
+    transition: all 0.2s;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  
+  .btn-primary:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(59,130,246,0.5);
+  }
+  
+  .btn-primary:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+  
+  #canvas {
+    background: linear-gradient(to bottom, #87ceeb, #87ceeb 70%, #90ee90);
+    border: 3px solid #2563eb;
+    border-radius: 16px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+    max-width: 100%;
+    display: block;
+    margin: 20px auto 0 auto;
+    touch-action: none;
+    cursor: pointer;
+  }
+  
+  .info {
+    color: #94a3b8;
+    font-size: 13px;
+    text-align: center;
+    display: block;
+    margin: 15px 0 10px 0;
+    padding: 0 20px;
+  }
+  
+  #status {
+    margin-top: 15px;
+    font-size: 13px;
+    line-height: 1.5;
+    background: #0f151a;
+    border: 1px solid #1f2a32;
+    border-radius: 10px;
+    padding: 12px;
+  }
+  
+  #status b { color: #cde7d8; }
+  #status .ok { color: #4ade80; }
+  #status .warn { color: #fbbf24; }
+  #status .err { color: #f87171; }
+  #status a { color: #86c6ff; text-decoration: none; }
+  
+  #play-again {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    padding: 16px 32px;
+    background: linear-gradient(135deg, #3b82f6, #2563eb);
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    font-weight: 900;
+    font-size: 18px;
+    cursor: pointer;
+    box-shadow: 0 10px 40px rgba(59,130,246,0.5);
+    z-index: 50;
+  }
+  
+  .instructions {
+    background: rgba(59,130,246,0.1);
+    border: 1px solid rgba(59,130,246,0.3);
+    border-radius: 10px;
+    padding: 15px;
+    margin-top: 15px;
+  }
+  
+  .instructions h3 {
+    color: #3b82f6;
+    font-size: 16px;
+    margin-bottom: 10px;
+  }
+  
+  .instructions ul {
+    list-style: none;
+    padding: 0;
+  }
+  
+  .instructions li {
+    color: #cbd5e1;
+    font-size: 14px;
+    margin-bottom: 8px;
+    padding-left: 20px;
+    position: relative;
+  }
+  
+  .instructions li:before {
+    content: "•";
+    color: #3b82f6;
+    font-weight: bold;
+    position: absolute;
+    left: 0;
+  }
+  
+  @media (max-width: 720px) {
+    #canvas { width: 100%; height: auto; }
+    .game-header {
+      padding: 12px 15px;
+    }
+    .game-header h1 {
+      font-size: 18px;
+    }
+    .header-stats {
+      gap: 20px;
+    }
+    .stat-item label {
+      font-size: 11px;
+    }
+    .stat-item .score-display {
+      font-size: 18px;
+    }
+  }
+</style>
+</head>
+<body>
+  <div class="game-header">
+    <h1>✈️ Bouncing Plane</h1>
+    <div class="header-stats">
+      <div class="stat-item">
+        <label>Score:</label>
+        <span class="score-display" id="scoreDisplay">0</span>
+      </div>
+      <div class="stat-item">
+        <label>Distance:</label>
+        <span class="score-display" id="distanceDisplay">0m</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <div id="intro-overlay" class="overlay">
+      <div class="card" role="dialog" aria-modal="true">
+        <h1>✈️ Bouncing Plane</h1>
+        <p class="muted">Click to bounce and avoid the obstacles!</p>
+
+        <div style="display: flex; justify-content: center; gap: 12px; margin-top: 20px;">
+          <button id="play" class="btn-primary">💰 Pay & Play</button>
+        </div>
+        
+        <div class="instructions">
+          <h3>How to Play:</h3>
+          <ul>
+            <li>Click or tap the screen to make the plane bounce up</li>
+            <li>Avoid hitting the red obstacles</li>
+            <li>Fly through the gaps to score points</li>
+            <li>The game gets harder as you progress</li>
+            <li>Don't hit the ground or ceiling!</li>
+          </ul>
+        </div>
+        
+        <div id="status" class="hidden"></div>
+      </div>
+    </div>
+
+    <canvas id="canvas" width="800" height="500"></canvas>
+    
+    <span class="info">Click or tap anywhere to bounce the plane upward!</span>
+
+    <button id="play-again" class="hidden">💰 Pay & Play Again</button>
+  </div>
+
+<script type="module">
+import { sdk } from 'https://esm.sh/@farcaster/miniapp-sdk';
+sdk.actions.ready();
+
+const USE_BASE_SEPOLIA = false;
+const RECIPIENT = "0x5DE6945201D6B551cdB6F88bE0335A989833c446";
+const AMOUNT_ETH = "0.00001";
+
+const BASE_MAINNET = { chainId: "0x2105",  explorer: "https://basescan.org/tx/" };
+const BASE_SEPOLIA = { chainId: "0x14a34", explorer: "https://sepolia.basescan.org/tx/" };
+const TARGET = USE_BASE_SEPOLIA ? BASE_SEPOLIA : BASE_MAINNET;
+
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+const statusEl = document.getElementById('status');
+const playBtn = document.getElementById('play');
+const playAgainBtn = document.getElementById('play-again');
+const scoreDisplay = document.getElementById('scoreDisplay');
+const distanceDisplay = document.getElementById('distanceDisplay');
+
+const showStatus = () => statusEl.classList.remove('hidden');
+const addLine = html => { showStatus(); statusEl.insertAdjacentHTML('beforeend', `<div>${html}</div>`); };
+const clearStatus = () => statusEl.innerHTML = '';
+const disable = (el, yes=true) => { if (el) el.disabled = yes; };
+
+function parseEther(x) {
+  const [w, f=""] = String(x).split('.');
+  const frac = (f + '0'.repeat(18)).slice(0, 18);
+  return '0x' + (BigInt(w) * 10n**18n + BigInt(frac)).toString(16);
+}
+
+async function getProvider() {
+  try {
+    const p = await sdk.wallet.getEthereumProvider();
+    if (p) return p;
+  } catch {}
+  return window.ethereum ?? null;
+}
+
+async function ensureChain(provider, chainId) {
+  const current = (await provider.request({ method: 'eth_chainId' }))?.toLowerCase();
+  if (current === chainId.toLowerCase()) return;
+  try {
+    await provider.request({ method: 'wallet_switchEthereumChain', params: [{ chainId }] });
+  } catch (e) {
+    if (e?.code === 4902) {
+      await provider.request({ method: 'wallet_addEthereumChain', params: [{ chainId }] });
+      await provider.request({ method: 'wallet_switchEthereumChain', params: [{ chainId }] });
+    } else { throw e; }
+  }
+}
+
+async function requiredPayment() {
+  clearStatus();
+  addLine(`<b>Step 1:</b> Locating wallet provider…`);
+  const provider = await getProvider();
+  if (!provider) {
+    addLine(`<span class="err">No wallet available.</span> Open in Farcaster or enable a wallet.`);
+    throw new Error('NO_PROVIDER');
+  }
+  addLine(`<span class="ok">Provider ready.</span>`);
+
+  addLine(`<b>Step 2:</b> Requesting accounts…`);
+  const [from] = await provider.request({ method: 'eth_requestAccounts' });
+  addLine(`<span class="ok">Account: ${from.slice(0,6)}…${from.slice(-4)}</span>`);
+
+  addLine(`<b>Step 3:</b> Switching to Base${USE_BASE_SEPOLIA?' Sepolia':''}…`);
+  await ensureChain(provider, TARGET.chainId);
+  addLine(`<span class="ok">On Base${USE_BASE_SEPOLIA?' Sepolia':''}.</span>`);
+
+  addLine(`<b>Step 4:</b> Sending ${AMOUNT_ETH} ETH to ${RECIPIENT.slice(0,6)}…${RECIPIENT.slice(-4)}…`);
+  const hash = await provider.request({
+    method: 'eth_sendTransaction',
+    params: [{ from, to: RECIPIENT, value: parseEther(AMOUNT_ETH) }]
+  });
+  addLine(`<span class="ok">TX sent.</span> <a target="_blank" rel="noopener" href="${TARGET.explorer}${hash}">View on Basescan</a>`);
+  return hash;
+}
+
+async function payThen(action, triggerBtn) {
+  try {
+    disable(triggerBtn, true);
+    await requiredPayment();
+    await action();
+  } catch (e) {
+    console.warn('Payment gate blocked action:', e);
+    addLine(`<span class="warn">Payment required. Please try again.</span>`);
+  } finally {
+    disable(triggerBtn, false);
+  }
+}
+
+// Game State
+let gameState = {
+  planeY: 250,
+  planeVelocity: 0,
+  obstacles: [],
+  score: 0,
+  cameraX: 0,
+  animationId: null,
+  nextObstacleX: 400,
+  gameActive: false,
+  gameOver: false,
+  lastTime: Date.now()
+};
+
+const GRAVITY = 0.6;
+const BOUNCE_STRENGTH = -12;
+const PLANE_SIZE = 40;
+const SCROLL_SPEED = 4;
+const OBSTACLE_SPACING = 300;
+
+function drawPlane() {
+  const planeRotation = Math.min(Math.max(gameState.planeVelocity * 3, -30), 30);
+  
+  ctx.save();
+  ctx.translate(100, gameState.planeY);
+  ctx.rotate((planeRotation * Math.PI) / 180);
+  
+  // Main fuselage
+  ctx.fillStyle = '#3b82f6';
+  ctx.beginPath();
+  ctx.ellipse(0, 0, 36, 10, 0, 0, Math.PI * 2);
+  ctx.fill();
+  
+  // Nose cone
+  ctx.fillStyle = '#60a5fa';
+  ctx.beginPath();
+  ctx.ellipse(30, 0, 18, 8, 0, 0, Math.PI * 2);
+  ctx.fill();
+  
+  // Cockpit window
+  ctx.fillStyle = 'rgba(30, 58, 138, 0.4)';
+  ctx.beginPath();
+  ctx.ellipse(25, -3, 11, 7, 0, 0, Math.PI * 2);
+  ctx.fill();
+  
+  ctx.fillStyle = 'rgba(147, 197, 253, 0.5)';
+  ctx.beginPath();
+  ctx.ellipse(27, -4, 5, 3, 0, 0, Math.PI * 2);
+  ctx.fill();
+  
+  // Main wings
+  ctx.fillStyle = '#2563eb';
+  ctx.beginPath();
+  ctx.moveTo(-6, 0);
+  ctx.lineTo(-28, -20);
+  ctx.lineTo(-16, 0);
+  ctx.lineTo(-28, 20);
+  ctx.closePath();
+  ctx.fill();
+  
+  // Tail section
+  ctx.fillStyle = '#2563eb';
+  ctx.beginPath();
+  ctx.ellipse(-18, 0, 14, 8, 0, 0, Math.PI * 2);
+  ctx.fill();
+  
+  // Vertical stabilizer
+  ctx.fillStyle = '#1e40af';
+  ctx.beginPath();
+  ctx.moveTo(-21, 0);
+  ctx.lineTo(-26, -20);
+  ctx.lineTo(-18, 0);
+  ctx.closePath();
+  ctx.fill();
+  
+  // Horizontal stabilizer
+  ctx.fillStyle = '#1d4ed8';
+  ctx.beginPath();
+  ctx.moveTo(-21, 0);
+  ctx.lineTo(-30, -3);
+  ctx.lineTo(-24, 0);
+  ctx.lineTo(-30, 3);
+  ctx.closePath();
+  ctx.fill();
+  
+  ctx.restore();
+}
+
+function drawObstacles() {
+  gameState.obstacles.forEach(obs => {
+    const screenX = obs.x - gameState.cameraX;
+    
+    // Top obstacle
+    ctx.fillStyle = 'linear-gradient(to right, #dc2626, #ef4444)';
+    ctx.fillRect(screenX, 0, 60, obs.gapY);
+    
+    ctx.fillStyle = '#b91c1c';
+    ctx.fillRect(screenX, obs.gapY - 12, 60, 12);
+    
+    ctx.strokeStyle = '#991b1b';
+    ctx.lineWidth = 3;
+    ctx.strokeRect(screenX, 0, 60, obs.gapY);
+    
+    // Bottom obstacle
+    ctx.fillRect(screenX, obs.gapY + obs.gap, 60, canvas.height - (obs.gapY + obs.gap));
+    
+    ctx.fillStyle = '#b91c1c';
+    ctx.fillRect(screenX, obs.gapY + obs.gap, 60, 12);
+    
+    ctx.strokeRect(screenX, obs.gapY + obs.gap, 60, canvas.height - (obs.gapY + obs.gap));
+  });
+}
+
+function drawBackground() {
+  // Sky gradient
+  const skyGradient = ctx.createLinearGradient(0, 0, 0, canvas.height * 0.7);
+  skyGradient.addColorStop(0, '#87ceeb');
+  skyGradient.addColorStop(1, '#b0d4f1');
+  ctx.fillStyle = skyGradient;
+  ctx.fillRect(0, 0, canvas.width, canvas.height * 0.7);
+  
+  // Ground
+  ctx.fillStyle = '#90ee90';
+  ctx.fillRect(0, canvas.height * 0.7, canvas.width, canvas.height * 0.3);
+  
+  // Clouds
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+  for (let i = 0; i < 5; i++) {
+    const x = (i * 200 - (gameState.cameraX * 0.3) % 1000);
+    const y = 50 + (i % 3) * 60;
+    ctx.beginPath();
+    ctx.ellipse(x, y, 40 + i * 5, 20 + i * 3, 0, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  
+  // Sun
+  ctx.fillStyle = '#ffd700';
+  ctx.beginPath();
+  ctx.arc(700 - (gameState.cameraX * 0.1) % 900, 80, 30, 0, Math.PI * 2);
+  ctx.fill();
+}
+
+function resetGame() {
+  gameState.planeY = 250;
+  gameState.planeVelocity = 0;
+  gameState.obstacles = [];
+  gameState.score = 0;
+  gameState.cameraX = 0;
+  gameState.nextObstacleX = 400;
+  gameState.lastTime = Date.now();
+}
+
+function checkCollision() {
+  const planeLeft = gameState.cameraX + 100;
+  const planeRight = gameState.cameraX + 100 + (PLANE_SIZE * 1.8);
+  const planeTop = gameState.planeY;
+  const planeBottom = gameState.planeY + PLANE_SIZE;
+  
+  // Check boundary collision
+  if (planeTop <= 0 || planeBottom >= canvas.height) {
+    return true;
+  }
+  
+  // Check obstacle collision
+  for (let obs of gameState.obstacles) {
+    const obsLeft = obs.x;
+    const obsRight = obs.x + 60;
+    
+    if (planeRight > obsLeft && planeLeft < obsRight) {
+      if (planeTop < obs.gapY || planeBottom > obs.gapY + obs.gap) {
+        return true;
+      }
+    }
+  }
+  
+  return false;
+}
+
+function gameLoop() {
+  if (!gameState.gameActive || gameState.gameOver) return;
+  
+  const now = Date.now();
+  const deltaTime = (now - gameState.lastTime) / 16.67;
+  gameState.lastTime = now;
+  
+  // Clear canvas
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  
+  drawBackground();
+  
+  // Update plane physics
+  gameState.planeVelocity += GRAVITY * deltaTime;
+  gameState.planeY += gameState.planeVelocity * deltaTime;
+  
+  // Move camera
+  gameState.cameraX += SCROLL_SPEED;
+  
+  // Spawn obstacles
+  if (gameState.cameraX > gameState.nextObstacleX - canvas.width) {
+    const difficultyMultiplier = 1 + Math.floor(gameState.score / 5) * 0.15;
+    const minGap = 120;
+    const maxGap = 180;
+    const gap = Math.max(minGap, maxGap - Math.floor(gameState.score / 5) * 10);
+    
+    const minY = 80;
+    const maxY = canvas.height - gap - 80;
+    const gapY = Math.random() * (maxY - minY) + minY;
+    
+    gameState.obstacles.push({
+      id: gameState.nextObstacleX,
+      x: gameState.nextObstacleX,
+      gapY: gapY,
+      gap: gap,
+      scored: false
+    });
+    
+    const spacing = Math.max(250, OBSTACLE_SPACING - Math.floor(gameState.score / 5) * 20);
+    gameState.nextObstacleX += spacing;
+  }
+  
+  // Update obstacles and score
+  gameState.obstacles = gameState.obstacles.filter(obs => {
+    if (obs.x < gameState.cameraX - 100) {
+      return false;
+    }
+    
+    if (!obs.scored && gameState.cameraX + 100 > obs.x + 60) {
+      obs.scored = true;
+      gameState.score++;
+      scoreDisplay.textContent = gameState.score;
+    }
+    
+    return true;
+  });
+  
+  distanceDisplay.textContent = Math.floor(gameState.cameraX / 10) + 'm';
+  
+  drawObstacles();
+  drawPlane();
+  
+  // Check collision
+  if (checkCollision()) {
+    endGame();
+    return;
+  }
+  
+  gameState.animationId = requestAnimationFrame(gameLoop);
+}
+
+function endGame() {
+  gameState.gameOver = true;
+  gameState.gameActive = false;
+  
+  ctx.fillStyle = 'rgba(0,0,0,0.7)';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  
+  ctx.fillStyle = '#e7ecf0';
+  ctx.font = 'bold 48px system-ui';
+  ctx.textAlign = 'center';
+  ctx.fillText('Crashed!', canvas.width / 2, canvas.height / 2 - 60);
+  
+  ctx.font = 'bold 32px system-ui';
+  ctx.fillStyle = '#3b82f6';
+  ctx.fillText('Score: ' + gameState.score, canvas.width / 2, canvas.height / 2 - 10);
+  
+  ctx.font = 'bold 24px system-ui';
+  ctx.fillStyle = '#2563eb';
+  ctx.fillText('Distance: ' + Math.floor(gameState.cameraX / 10) + 'm', canvas.width / 2, canvas.height / 2 + 30);
+  
+  ctx.font = '18px system-ui';
+  ctx.fillStyle = '#a8b6c1';
+  ctx.fillText('Click button below to play again', canvas.width / 2, canvas.height / 2 + 65);
+  
+  playAgainBtn.classList.remove('hidden');
+}
+
+function handleClick(e) {
+  e.preventDefault();
+  if (gameState.gameActive && !gameState.gameOver) {
+    gameState.planeVelocity = BOUNCE_STRENGTH;
+  }
+}
+
+canvas.addEventListener('click', handleClick);
+canvas.addEventListener('touchstart', handleClick);
+
+document.addEventListener('keydown', (e) => {
+  if (e.code === 'Space') {
+    e.preventDefault();
+    if (gameState.gameActive && !gameState.gameOver) {
+      gameState.planeVelocity = BOUNCE_STRENGTH;
+    }
+  }
+});
+
+playBtn.addEventListener('click', (e) => {
+  e.preventDefault();
+  payThen(() => {
+    document.getElementById('intro-overlay').classList.add('hidden');
+    gameState.gameActive = true;
+    gameState.gameOver = false;
+    resetGame();
+    scoreDisplay.textContent = '0';
+    distanceDisplay.textContent = '0m';
+    gameLoop();
+  }, playBtn);
+});
+
+playAgainBtn.addEventListener('click', (e) => {
+  e.preventDefault();
+  payThen(() => {
+    playAgainBtn.classList.add('hidden');
+    gameState.gameActive = true;
+    gameState.gameOver = false;
+    resetGame();
+    scoreDisplay.textContent = '0';
+    distanceDisplay.textContent = '0m';
+    gameLoop();
+  }, playAgainBtn);
+});
+
+window.addEventListener('error', e => console.error('Error:', e.error || e));
+window.addEventListener('unhandledrejection', e => console.error('Unhandled promise:', e.reason));
+</script>
+</body>
+</html>
