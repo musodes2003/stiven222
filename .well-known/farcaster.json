@@ -1,15 +1,15 @@
 {
   "accountAssociation": {
-    "header": "eyJmaWQiOjE0MDM3MzIsInR5cGUiOiJjdXN0b2R5Iiwia2V5IjoiMHhFZDY2NGQ5MzM4MDZlZTg0YWI0NUE0YTQzMUQwOTY5RUIzRjc3NzAwIn0",
-    "payload": "eyJkb21haW4iOiJzdGl2ZW4yMjItNGVhaS52ZXJjZWwuYXBwIn0",
-    "signature": "ZaI+R3Izy4bZm1KWX5PHVKr74G42lpB1c2GFHl2y/S9khNfUDTGk0g5zyr6hyQ4kBn+DZSfYymsbQrQPwwi1Lxs="
+    "header": "eyJmaWQiOjE0MDM3MzIsInR5cGUiOiJjdXN0b2R5Iiwia2V5IjoiMHg3NERiQkVlMTBGZDNGMjVCYTNiNTI5MkZmNDFFRDFGODUzODEzQmZkIn0",
+    "payload": "eyJkb21haW4iOiJzdGl2ZW4yMjIudmVyY2VsLmFwcCJ9",
+    "signature": "3xt4bYCdEJf+ZQNnpU6sQVZq9gYkA7QYFnRVTpQ/SmYM5SFrw+mQPjLnuo/uR+yQLmfMud+VTByfjfsIJaxi/Bs="
   },
   "miniapp": {
     "version": "1",
-    "name": "Neon race",
-    "iconUrl": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTIOMokQP5Cxcx2qOSxGt4lXoSzqPdE5Yog1g&s",
+    "name": "Bouncing Plane",
+    "iconUrl": "https://play-lh.googleusercontent.com/aKiuTDLuMffLyIQFYyhw7HlPCX9rLvPpfBE4zckFQkgTwEPaRNRTl4gCwEihGKZgZ8DY=w240-h480-rw",
     "homeUrl": "https://stiven222-5fwr.vercel.app/",
-    "imageUrl": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTIOMokQP5Cxcx2qOSxGt4lXoSzqPdE5Yog1g&s",
+    "imageUrl": "https://play-lh.googleusercontent.com/aKiuTDLuMffLyIQFYyhw7HlPCX9rLvPpfBE4zckFQkgTwEPaRNRTl4gCwEihGKZgZ8DY=w240-h480-rw",
     "buttonTitle": "Play Now",
     "splashImageUrl": "https://raw.githubusercontent.com/enchanted-assets/public/main/images/tetris-splash.png",
     "splashBackgroundColor": "#000000",
